@@ -272,109 +272,7 @@ private:
         std::string ans = int_res + "." + frac_res;
         return ans;
     }
-
-    static std::string subBinaryWithFraction(const std::string& num1, const std::string& num2, int frac_bits = 32) {
-        auto [intPart1, fracPart1] = getTwoStrings(num1);
-        auto [intPart2, fracPart2] = getTwoStrings(num2);
-    
-        // Преобразуем целые и дробные части в двоичный вид
-        intPart1 = decimalToBinary(intPart1);
-        intPart2 = decimalToBinary(intPart2);
-        fracPart1 = Binary_Faction(fracPart1);
-        fracPart2 = Binary_Faction(fracPart2);
-    
-        // Дополняем дробные части до одинаковой длины
-        size_t maxFracLength = std::max(fracPart1.size(), fracPart2.size());
-        fracPart1.append(maxFracLength - fracPart1.size(), '0');
-        fracPart2.append(maxFracLength - fracPart2.size(), '0');
-    
-        // Реверсируем дробные части для удобства вычитания
-        std::reverse(fracPart1.begin(), fracPart1.end());
-        std::reverse(fracPart2.begin(), fracPart2.end());
-    
-        // Определяем, какое число больше
-        bool isNegative = false;
-        if (intPart1.size() < intPart2.size() || (intPart1.size() == intPart2.size() && intPart1 < intPart2)) {
-            isNegative = true;
-            std::swap(intPart1, intPart2);
-            std::swap(fracPart1, fracPart2);
-        } else if (intPart1.size() == intPart2.size() && intPart1 == intPart2) {
-            // Если целые части равны, сравниваем дробные части
-            if (fracPart1 < fracPart2) {
-                isNegative = true;
-                std::swap(fracPart1, fracPart2);
-            }
-        }
-
-        std::string frac_res;
-        int borrow = 0;
-    
-        // Вычитаем дробные части
-        for (size_t i = 0; i < maxFracLength; ++i) {
-            int bit1 = (i < fracPart1.size()) ? (fracPart1[i] - '0') : 0;
-            int bit2 = (i < fracPart2.size()) ? (fracPart2[i] - '0') : 0;
-    
-            int diff = bit1 - bit2 - borrow;
-            if (diff < 0) {
-                diff += 2;
-                borrow = 1;
-            } else {
-                borrow = 0;
-            }
-            frac_res.push_back((diff % 2) + '0');
-        }
-
-        // Обрезаем дробную часть до frac_bits битов
-        if (frac_res.size() > frac_bits) {
-            frac_res.resize(frac_bits);
-        }
-
-        // Реверсируем дробную часть обратно
-        std::reverse(frac_res.begin(), frac_res.end());
-
-        // Реверсируем целые части для удобства вычитания
-        std::reverse(intPart1.begin(), intPart1.end());
-        std::reverse(intPart2.begin(), intPart2.end());
-
-        std::string int_res;
-        size_t maxIntLength = std::max(intPart1.size(), intPart2.size());
-
-        // Вычитаем целые части
-        for (size_t i = 0; i < maxIntLength || borrow; ++i) {
-            int bit1 = (i < intPart1.size()) ? (intPart1[i] - '0') : 0;
-            int bit2 = (i < intPart2.size()) ? (intPart2[i] - '0') : 0;
-    
-            int diff = bit1 - bit2 - borrow;
-            if (diff < 0) {
-                diff += 2;
-                borrow = 1;
-            } else {
-                borrow = 0;
-            }
-            int_res.push_back((diff % 2) + '0');
-        }
-
-        // Реверсируем целую часть обратно
-        std::reverse(int_res.begin(), int_res.end());
-    
-        // Убираем ведущие нули
-        int_res.erase(0, int_res.find_first_not_of('0'));
-        if (int_res.empty()) {
-            int_res = "0";
-        }
-    
-        // Собираем результат
-        std::string ans = int_res + "." + frac_res;
-    
-        // Добавляем знак минус, если результат отрицательный
-        if (isNegative) {
-            ans = "-" + ans;
-        }
-    
-        return ans;
-    }
-
-    static int compareBinary(const std::string& num1, const std::string& num2) {
+    static int compareBinary(const std::string& num1, const std::string& num2)  {
         if (num1.size() < num2.size()) {
             return -1;
         } else if (num1.size() > num2.size()) {
@@ -383,125 +281,234 @@ private:
             return num1.compare(num2);
         }
     }
+static std::string subBinaryWithFraction(const std::string& num1, const std::string& num2, int frac_bits = 32) {
+    auto [intPart1, fracPart1] = getTwoStrings(num1);
+    auto [intPart2, fracPart2] = getTwoStrings(num2);
 
-    static std::string subtractBinary(const std::string& num1, const std::string& num2) {
-        std::string result;
-        int borrow = 0;
-        size_t maxLength = std::max(num1.size(), num2.size());
-    
-        for (size_t i = 0; i < maxLength; ++i) {
-            int bit1 = (i < num1.size()) ? (num1[num1.size() - 1 - i] - '0') : 0;
-            int bit2 = (i < num2.size()) ? (num2[num2.size() - 1 - i] - '0') : 0;
-    
-            int diff = bit1 - bit2 - borrow;
-            if (diff < 0) {
-                diff += 2;
-                borrow = 1;
-            } else {
-                borrow = 0;
-            }
-            result.push_back((diff % 2) + '0');
-        }
-    
-        std::reverse(result.begin(), result.end());
-        result.erase(0, result.find_first_not_of('0'));
-        if (result.empty()) {
-            result = "0";
-        }
-    
-        return result;
+    // Обработка знаков
+    bool isNegative1 = (intPart1[0] == '-');
+    bool isNegative2 = (intPart2[0] == '-');
+
+    if (isNegative1 && !isNegative2) {
+        // Первое число отрицательное, второе положительное
+        std::string num3 = num1.substr(1);
+        return '-' + addBinaryWithFraction(num2, num3, frac_bits);
+    } else if (!isNegative1 && isNegative2) {
+        // Первое число положительное, второе отрицательное
+        std::string num4 = num2.substr(1);
+        return addBinaryWithFraction(num1, num4, frac_bits);
+    } else if (isNegative1 && isNegative2) {
+        // Оба числа отрицательные
+        std::string num3 = num1.substr(1);
+        std::string num4 = num2.substr(1);
+        return '-' + subBinaryWithFraction(num4, num3, frac_bits);
     }
-    //деление в столбик
-    static std::string divBinaryWithFraction(const std::string& num1, const std::string& num2, int frac_bits = 32) {
+
+    // Преобразуем целые и дробные части в двоичный вид
+    intPart1 = decimalToBinary(intPart1);
+    intPart2 = decimalToBinary(intPart2);
+    fracPart1 = Binary_Faction(fracPart1, frac_bits);
+    fracPart2 = Binary_Faction(fracPart2, frac_bits);
+
+    // Дополняем дробные части до одинаковой длины
+    size_t maxFracLength = std::max(fracPart1.size(), fracPart2.size());
+    fracPart1.append(maxFracLength - fracPart1.size(), '0');
+    fracPart2.append(maxFracLength - fracPart2.size(), '0');
+
+    // Определяем, какое число больше
+    bool isNegative = false;
+    if (compareBinary(intPart1 + fracPart1, intPart2 + fracPart2) < 0) {
+        isNegative = true;
+        std::swap(intPart1, intPart2);
+        std::swap(fracPart1, fracPart2);
+    }
+
+    // Реверсируем дробные части для удобства вычитания
+    std::reverse(fracPart1.begin(), fracPart1.end());
+    std::reverse(fracPart2.begin(), fracPart2.end());
+
+    // Вычитаем дробные части
+    std::string frac_res;
+    int borrow = 0;
+    for (size_t i = 0; i < maxFracLength; ++i) {
+        int bit1 = (i < fracPart1.size()) ? (fracPart1[i] - '0') : 0;
+        int bit2 = (i < fracPart2.size()) ? (fracPart2[i] - '0') : 0;
+        int diff = bit1 - bit2 - borrow;
+        if (diff < 0) {
+            diff += 2;
+            borrow = 1;
+        } else {
+            borrow = 0;
+        }
+        frac_res.push_back((diff % 2) + '0');
+    }
+
+    // Обрезаем дробную часть до frac_bits битов
+    if (frac_res.size() > frac_bits) {
+        frac_res.resize(frac_bits);
+    }
+
+    // Реверсируем дробную часть обратно
+    std::reverse(frac_res.begin(), frac_res.end());
+
+    // Реверсируем целые части для удобства вычитания
+    std::reverse(intPart1.begin(), intPart1.end());
+    std::reverse(intPart2.begin(), intPart2.end());
+
+    // Вычитаем целые части
+    std::string int_res;
+    size_t maxIntLength = std::max(intPart1.size(), intPart2.size());
+    for (size_t i = 0; i < maxIntLength || borrow; ++i) {
+        int bit1 = (i < intPart1.size()) ? (intPart1[i] - '0') : 0;
+        int bit2 = (i < intPart2.size()) ? (intPart2[i] - '0') : 0;
+        int diff = bit1 - bit2 - borrow;
+        if (diff < 0) {
+            diff += 2;
+            borrow = 1;
+        } else {
+            borrow = 0;
+        }
+        int_res.push_back((diff % 2) + '0');
+    }
+
+    // Реверсируем целую часть обратно
+    std::reverse(int_res.begin(), int_res.end());
+
+    // Убираем ведущие нули
+    int_res.erase(0, int_res.find_first_not_of('0'));
+    if (int_res.empty()) {
+        int_res = "0";
+    }
+
+    // Собираем результат
+    std::string ans = int_res + "." + frac_res;
+
+    // Добавляем знак минус, если результат отрицательный
+    if (isNegative) {
+        ans = "-" + ans;
+    }
+
+    return ans;
+}
+
+static std::string subtractBinary(const std::string& num1, const std::string& num2) {
+    std::string result;
+    int borrow = 0;
+    size_t maxLength = std::max(num1.size(), num2.size());
+
+    for (size_t i = 0; i < maxLength; ++i) {
+        int bit1 = (i < num1.size()) ? (num1[num1.size() - 1 - i] - '0') : 0;
+        int bit2 = (i < num2.size()) ? (num2[num2.size() - 1 - i] - '0') : 0;
+
+        int diff = bit1 - bit2 - borrow;
+        if (diff < 0) {
+            diff += 2;
+            borrow = 1;
+        } else {
+            borrow = 0;
+        }
+        result.push_back((diff % 2) + '0');
+    }
+
+    std::reverse(result.begin(), result.end());
+    result.erase(0, result.find_first_not_of('0'));
+    if (result.empty()) {
+        result = "0";
+    }
+
+    return result;
+}
+//деление в столбик
+static std::string divBinaryWithFraction(const std::string& num1, const std::string& num2, int frac_bits = 32) {
+    auto [intPart1, fracPart1] = getTwoStrings(num1);
+    auto [intPart2, fracPart2] = getTwoStrings(num2);
+    if (intPart1[0] == '-' && intPart2[0] == '-'){
+        std::string num3 = num1.substr(1);
+        std::string num4 = num2.substr(1);
+        return divBinaryWithFraction(num3, num4, frac_bits);
+    } else if ((intPart1[0] == '-' && intPart2[0] != '-')) {
+        std::string num3 = num1.substr(1);
+        return '-' + divBinaryWithFraction(num3, num2, frac_bits);        
+    } else if ((intPart1[0] != '-' && intPart2[0] == '-')) {
+        std::string num4 = num2.substr(1);
+        return '-' + divBinaryWithFraction(num1, num4, frac_bits);  
+    }
+
+    // Преобразуем целые и дробные части в двоичный вид
+    intPart1 = decimalToBinary(intPart1);
+    intPart2 = decimalToBinary(intPart2);
+    fracPart1 = Binary_Faction(fracPart1);
+    fracPart2 = Binary_Faction(fracPart2);
+
+    // Объединяем целую и дробную части в одно двоичное число
+    std::string binaryNum1 = intPart1 + fracPart1;
+    std::string binaryNum2 = intPart2 + fracPart2;
+
+    // Удаляем ведущие нули
+    binaryNum1.erase(0, binaryNum1.find_first_not_of('0'));
+    binaryNum2.erase(0, binaryNum2.find_first_not_of('0'));
+
+    if (binaryNum2.empty()) {
+        throw std::invalid_argument("Division by zero");
+    }
+
+    // Инициализируем результат и остаток
+    std::string result;
+    std::string remainder = "0";
+
+    // Деление в столбик
+    for (size_t i = 0; i < binaryNum1.size() + frac_bits; ++i) {
+        remainder.push_back(i < binaryNum1.size() ? binaryNum1[i] : '0');
+
+        // Убираем ведущие нули в остатке
+        remainder.erase(0, remainder.find_first_not_of('0'));
+        if (remainder.empty()) {
+            remainder = "0";
+        }
+
+        if (compareBinary(remainder, binaryNum2) >= 0) {
+            result.push_back('1');
+            remainder = subtractBinary(remainder, binaryNum2);
+        } else {
+            result.push_back('0');
+        }
+    }
+
+    // Вставляем точку в результат
+    result.insert(result.begin() + binaryNum1.size(), '.');
+
+    // Убираем ведущие нули в целой части
+    size_t dotPos = result.find('.');
+    std::string intPartResult = result.substr(0, dotPos);
+    intPartResult.erase(0, intPartResult.find_first_not_of('0'));
+    if (intPartResult.empty()) {
+        intPartResult = "0";
+    }
+
+    // Убираем лишние нули в дробной части
+    std::string fracPartResult = result.substr(dotPos + 1);
+    fracPartResult.erase(fracPartResult.find_last_not_of('0') + 1);
+
+    // Собираем результат
+    std::string finalResult = intPartResult + "." + fracPartResult;
+
+    return finalResult;
+}    
+static std::string multiplyBinaryWithFraction(const std::string& num1, const std::string& num2, int frac_bits=32) {
+            // Разделяем числа на целую и дробную части
         auto [intPart1, fracPart1] = getTwoStrings(num1);
         auto [intPart2, fracPart2] = getTwoStrings(num2);
-        if (intPart1[0] == '-' && intPart2[0] == '-'){
-            std::string num3 = num1.substr(1);
-            std::string num4 = num2.substr(1);
-            return divBinaryWithFraction(num3, num4, frac_bits);
-        } else if ((intPart1[0] == '-' && intPart2[0] != '-')) {
-            std::string num3 = num1.substr(1);
-            return '-' + divBinaryWithFraction(num3, num2, frac_bits);        
-        } else if ((intPart1[0] != '-' && intPart2[0] == '-')) {
-            std::string num4 = num2.substr(1);
-            return '-' + divBinaryWithFraction(num1, num4, frac_bits);  
-        }
-    
-        // Преобразуем целые и дробные части в двоичный вид
-        intPart1 = decimalToBinary(intPart1);
-        intPart2 = decimalToBinary(intPart2);
-        fracPart1 = Binary_Faction(fracPart1);
-        fracPart2 = Binary_Faction(fracPart2);
-    
-        // Объединяем целую и дробную части в одно двоичное число
-        std::string binaryNum1 = intPart1 + fracPart1;
-        std::string binaryNum2 = intPart2 + fracPart2;
-    
-        // Удаляем ведущие нули
-        binaryNum1.erase(0, binaryNum1.find_first_not_of('0'));
-        binaryNum2.erase(0, binaryNum2.find_first_not_of('0'));
-    
-        if (binaryNum2.empty()) {
-            throw std::invalid_argument("Division by zero");
-        }
-    
-        // Инициализируем результат и остаток
-        std::string result;
-        std::string remainder = "0";
-    
-        // Деление в столбик
-        for (size_t i = 0; i < binaryNum1.size() + frac_bits; ++i) {
-            remainder.push_back(i < binaryNum1.size() ? binaryNum1[i] : '0');
-    
-            // Убираем ведущие нули в остатке
-            remainder.erase(0, remainder.find_first_not_of('0'));
-            if (remainder.empty()) {
-                remainder = "0";
-            }
-    
-            if (compareBinary(remainder, binaryNum2) >= 0) {
-                result.push_back('1');
-                remainder = subtractBinary(remainder, binaryNum2);
-            } else {
-                result.push_back('0');
-            }
-        }
-    
-        // Вставляем точку в результат
-        result.insert(result.begin() + binaryNum1.size(), '.');
-    
-        // Убираем ведущие нули в целой части
-        size_t dotPos = result.find('.');
-        std::string intPartResult = result.substr(0, dotPos);
-        intPartResult.erase(0, intPartResult.find_first_not_of('0'));
-        if (intPartResult.empty()) {
-            intPartResult = "0";
-        }
-    
-        // Убираем лишние нули в дробной части
-        std::string fracPartResult = result.substr(dotPos + 1);
-        fracPartResult.erase(fracPartResult.find_last_not_of('0') + 1);
-    
-        // Собираем результат
-        std::string finalResult = intPartResult + "." + fracPartResult;
-    
-        return finalResult;
-    }    
-    static std::string multiplyBinaryWithFraction(const std::string& num1, const std::string& num2, int frac_bits=32) {
-        // Разделяем числа на целую и дробную части
-        auto [intPart1, fracPart1] = getTwoStrings(num1);
-        auto [intPart2, fracPart2] = getTwoStrings(num2);
-        if (intPart1[0] == '-' && intPart2[0] == '-'){
-            std::string num3 = num1.substr(1);
-            std::string num4 = num2.substr(1);
-            return multiplyBinaryWithFraction(num3, num4, frac_bits);
-        } else if ((intPart1[0] == '-' && intPart2[0] != '-')) {
-            std::string num3 = num1.substr(1);
-            return '-' + multiplyBinaryWithFraction(num3, num2, frac_bits);        
-        } else if ((intPart1[0] != '-' && intPart2[0] == '-')) {
-            std::string num4 = num2.substr(1);
-            return '-' + multiplyBinaryWithFraction(num1, num4, frac_bits);  
-        }
+    if (intPart1[0] == '-' && intPart2[0] == '-'){
+        std::string num3 = num1.substr(1);
+        std::string num4 = num2.substr(1);
+        return multiplyBinaryWithFraction(num3, num4, frac_bits);
+    } else if ((intPart1[0] == '-' && intPart2[0] != '-')) {
+        std::string num3 = num1.substr(1);
+        return '-' + multiplyBinaryWithFraction(num3, num2, frac_bits);        
+    } else if ((intPart1[0] != '-' && intPart2[0] == '-')) {
+        std::string num4 = num2.substr(1);
+        return '-' + multiplyBinaryWithFraction(num1, num4, frac_bits);  
+    }
 
 
         // Преобразуем целые и дробные части в двоичный вид
@@ -552,16 +559,17 @@ private:
     
 
 };
+
 int main() {
     LongNumber num1("-2.5");
-    LongNumber num2("7.3");
+    LongNumber num2("-7.3");
     LongNumber res = num1 / num2;
     std::cout<<res.toString()<<std::endl;
     // Программист задает точность вручную
     LongNumber result = num1.addWithPrecision(num2, 16); // Точность 16 битов
     std::cout << "Result (16 bits): " << result.toString() << std::endl;
 
-    LongNumber result2 = num1.addWithPrecision(num2, 32); // Точность 32 бита
+    LongNumber result2 = num1.subWithPrecision(num2, 32); // Точность 32 бита
     std::cout << "Result (32 bits): " << result2.toString() << std::endl;
 
     return 0;
